@@ -15,15 +15,16 @@ import (
 )
 
 var (
-	limit, err = api.NewLimitAPI()
-	param      = api.NewQuotaRequest()
-	namespace  string
-	service    string
-	labelsStr  string
+	limit, err    = api.NewLimitAPI()
+	param         = api.NewQuotaRequest()
+	namespace     string
+	service       string
+	labelsStr     string
+	rateLimitType string
 )
 
 // Register .
-func Register(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), pattern ...string) {
+func RegisterQPSRateLimit(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), pattern ...string) {
 	if err != err {
 		log.Fatalf("fail to create consumerAPI, err is %v", err)
 	}
@@ -45,7 +46,9 @@ func Register(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), pattern
 			if err != nil {
 				log.Fatalf("fail to get Quota,err is %v", err)
 			}
-			defer getQuota.Release()
+			if rateLimitType == "concurrently" {
+				defer getQuota.Release()
+			}
 			if getQuota.Get().Code == api.QuotaResultOk {
 				r.Middleware.Next()
 			}
