@@ -50,10 +50,15 @@ func RegisterByHook(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), l
 		param.SetService(service)
 		r.BindHookHandler(pattern, ghttp.HookBeforeServe, func(r *ghttp.Request) {
 			getQuota, err := limit.GetQuota(param)
-			if err == nil && getQuota.Get().Code == api.QuotaResultOk {
-				r.Middleware.Next()
+			if err != nil {
+				// gf 带有错误回收，只是中断本次请求
+				panic(err)
 			}
-			limitExceededFunc(r)
+			if getQuota.Get().Code == api.QuotaResultOk {
+				r.Middleware.Next()
+			} else {
+				limitExceededFunc(r)
+			}
 		})
 	}
 	return nil
