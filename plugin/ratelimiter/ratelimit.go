@@ -24,7 +24,7 @@ var (
 )
 
 // Register .
-func RegisterQPSRateLimit(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), pattern ...string) {
+func Register(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), pattern ...string) {
 	if err != err {
 		log.Fatalf("fail to create consumerAPI, err is %v", err)
 	}
@@ -40,20 +40,18 @@ func RegisterQPSRateLimit(r *ghttp.Server, limitExceededFunc func(r *ghttp.Reque
 	param.SetNamespace(namespace)
 	param.SetService(service)
 
-	r.BindHookHandlerByMap(pattern[0], map[string]ghttp.HandlerFunc{
-		ghttp.HookBeforeServe: func(r *ghttp.Request) {
-			getQuota, err := limit.GetQuota(param)
-			if err != nil {
-				log.Fatalf("fail to get Quota,err is %v", err)
-			}
-			if rateLimitType == "concurrently" {
-				defer getQuota.Release()
-			}
-			if getQuota.Get().Code == api.QuotaResultOk {
-				r.Middleware.Next()
-			}
-			limitExceededFunc(r)
-		},
+	r.BindHookHandler(pattern[0], ghttp.HookBeforeServe, func(r *ghttp.Request) {
+		getQuota, err := limit.GetQuota(param)
+		if err != nil {
+			log.Fatalf("fail to get Quota,err is %v", err)
+		}
+		if rateLimitType == "concurrently" {
+			defer getQuota.Release()
+		}
+		if getQuota.Get().Code == api.QuotaResultOk {
+			r.Middleware.Next()
+		}
+		limitExceededFunc(r)
 	})
 }
 
