@@ -7,10 +7,10 @@
 package ratelimiter
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/polarismesh/polaris-go/api"
-	"log"
 	"strings"
 )
 
@@ -23,8 +23,8 @@ var (
 )
 
 // RegisterByUriLabel .
-func RegisterByUriLabel(labelMap map[string]string, limitExceededFunc func(r *ghttp.Request)) {
-
+func RegisterByUriLabel(labelMap map[string]string, limitExceededFunc func(r *ghttp.Request)) error {
+	return nil
 }
 
 // RateLimit .
@@ -35,14 +35,14 @@ func RateLimit(r *ghttp.Request) {
 }
 
 // RegisterByHook .
-func RegisterByHook(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), labelMap map[string]string) {
+func RegisterByHook(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), labelMap map[string]string) error {
 	if err != err {
-		log.Fatalf("fail to create consumerAPI, err is %v", err)
+		return errors.New(fmt.Sprintf("fail to create consumerAPI, err is %v", err))
 	}
 	for pattern, labelsStr := range labelMap {
 		label, err := parseLabels(labelsStr)
 		if err != nil {
-			log.Fatal(err.Error())
+			return err
 		}
 		param := api.NewQuotaRequest()
 		param.SetLabels(label)
@@ -50,15 +50,13 @@ func RegisterByHook(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), l
 		param.SetService(service)
 		r.BindHookHandler(pattern, ghttp.HookBeforeServe, func(r *ghttp.Request) {
 			getQuota, err := limit.GetQuota(param)
-			if err != nil {
-				log.Fatalf("fail to get Quota,err is %v", err)
-			}
-			if getQuota.Get().Code == api.QuotaResultOk {
+			if err == nil && getQuota.Get().Code == api.QuotaResultOk {
 				r.Middleware.Next()
 			}
 			limitExceededFunc(r)
 		})
 	}
+	return nil
 }
 
 //解析标签列表
