@@ -2,7 +2,7 @@
 //
 // This Source Code Form is subject to the terms of the MIT License.
 // If a copy of the MIT was not distributed with this file,
-// You can obtain one at https://github.com/gogf/gf.
+// You can obtain one at https://github.com/gogf/polaris.
 
 package polaris
 
@@ -48,13 +48,13 @@ func (p GfPolarisPlugin) Description() string {
 func (p GfPolarisPlugin) Install(s *ghttp.Server) error {
 	fmt.Println("GoFrame-polaris插件正在安装...")
 	configListener = p.Listener
-	// fmt.Printf("configListener: %s", configListener)
+	fmt.Printf("configListener: %s", configListener)
 	return Init()
 }
 
 // Remove plugin remove
 func (p GfPolarisPlugin) Remove() error {
-	RemoveConfigListener()
+	Deregister()
 	fmt.Println("GoFrame-polaris插件被移除。")
 	return nil
 }

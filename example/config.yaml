@@ -1,0 +1,52 @@
+---
+server:
+  Address: :8199
+  ServerRoot: ./
+  ServerAgent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.55 Safari/537.36
+  LogPath: ./logs/server
+  OpenApiPath: /api.json
+  SwaggerPath: /swagger
+logger:
+  Path: ./logs
+  Level: all
+  Stdout: true
+database:
+  link: mysql:root:root@tcp(127.0.0.1:3306)/test
+  debug: true
+  logger:
+    Path: ./logs/sql
+    Level: all
+    Stdout: true
+
+exam:
+  env: app_prod
+
+app:
+  env: local
+  environment: develop
+  version: 1.0.0
+  jaegerEndpoint: http://tracing-analysis-dc-bj.aliyuncs.com
+
+polaris:
+    # 系统配置
+    config:
+      # 是否心跳上报
+      isHeartbeat: 1
+      loggerPath: ./logs/polaris
+      backupPath: ./logs/polaris
+    server:
+      namespace: "default"
+      service: "houseme"
+      version: "1.0.0"
+      port: 8199
+
+global:
+  consumer:
+    localCache:
+      persistDir: $HOME/logs/backup
+  serverConnector:
+    connectTimeout: 1000ms
+    addresses:
+    - 192.168.100.222:8091
+    - 192.168.100.222:8090
+

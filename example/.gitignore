@@ -79,9 +79,6 @@ fabric.properties
 *.iml
 out
 gen
-.settings/
-.vscode/
-vendor/
 ### Go template
 # Binaries for programs and plugins
 *.exe
@@ -98,9 +95,4 @@ vendor/
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
-
-### macOS template
-# General
-.DS_Store
-logs
 
