@@ -8,11 +8,13 @@ package polaris
 
 import (
 	"context"
+	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/os/gcfg"
 	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/gogf/gf/v2/os/gtimer"
 	"github.com/polarismesh/polaris-go/api"
 	"github.com/polarismesh/polaris-go/pkg/config"
 )
@@ -39,11 +41,8 @@ var (
 
 // Init Polaris plug-in initialization.
 func Init() error {
-	var (
-		ctx = gctx.New()
-	)
+	ctx := gctx.New()
 	initConfigPolaris(ctx)
-	NewProvider(ctx)
 	// Consumer(ctx)
 	return nil
 }
@@ -51,12 +50,10 @@ func Init() error {
 // Deregister .Remove registration
 func Deregister() {
 	var (
-		provider, err = api.NewProviderAPIByConfig(cfgGlobal)
-		ctx           = gctx.New()
+		ctx      = gctx.New()
+		provider = NewProvider(ctx)
 	)
-	if nil != err {
-		g.Log().Fatal(ctx, "NewProvider api.NewProviderAPIByConfig fail err:", err)
-	}
+
 	defer provider.Destroy()
 	deregisterRequest := &api.InstanceDeRegisterRequest{}
 	deregisterRequest.Service = instance.Service
@@ -64,19 +61,33 @@ func Deregister() {
 	deregisterRequest.Host = instance.Host
 	deregisterRequest.Port = instance.Port
 	deregisterRequest.ServiceToken = instance.ServiceToken
-	if err = provider.Deregister(deregisterRequest); nil != err {
+	if err := provider.Deregister(deregisterRequest); nil != err {
 		g.Log().Fatal(ctx, "fail to deregister instance, err is %v", err)
 	}
+	g.Log().Info(ctx, "Deregister end")
 }
 
 // initConfigPolaris init
 func initConfigPolaris(ctx context.Context) {
 	var cfg = g.Cfg()
+
 	polarisConfig(ctx, cfg)
-	// 设置log目录
+	// set logger dir
 	api.SetLoggersDir(polaris.Config.LoggerPath)
+
 	cfgGlobal = globalPolarisConfig(ctx, cfg)
+
 	g.Log().Info(ctx, "initConfigPolaris config:", cfgGlobal)
+
+	// 实行注册
+	register(ctx)
+	if polaris.Config.IsHeartbeat > 0 {
+		gtimer.SetInterval(ctx, 5*time.Second, func(ctx context.Context) {
+			// heartbeat report
+			Heartbeat(ctx)
+		})
+	}
+	g.Log().Info(ctx, "api.initConfigPolaris end")
 }
 
 // Consumer .获取服务列表信息
@@ -97,47 +108,42 @@ func Consumer(ctx context.Context) {
 }
 
 // register .provider register
-func register(ctx context.Context, provider api.ProviderAPI) {
-	if instance.TTL != nil {
-		ttl := *instance.TTL
-		if ttl < TTL {
-			instance.SetTTL(TTL)
-		}
-	}
-	resp, err := provider.Register(instance)
+func register(ctx context.Context) {
+	var provider = NewProvider(ctx)
+	// before process exits
+	defer provider.Destroy()
+
+	g.Log().Debug(ctx, "register request start params:", polaris.Instance)
+	resp, err := provider.Register(polaris.Instance)
 	if nil != err {
 		g.Log().Fatal(ctx, "provider.register params:", resp, " fail reason err:", err)
 	}
 }
 
 // Heartbeat .heartbeat report
-func Heartbeat(ctx context.Context, provider api.ProviderAPI) {
+func Heartbeat(ctx context.Context) {
+	var provider = NewProvider(ctx)
+	// before process exits
+	defer provider.Destroy()
+
 	request := &api.InstanceHeartbeatRequest{}
-	request.Namespace = instance.Namespace
-	request.Service = instance.Service
-	request.Host = instance.Host
-	request.Port = instance.Port
+	request.Namespace = polaris.Instance.Namespace
+	request.Service = polaris.Instance.Service
+	request.Host = polaris.Instance.Host
+	request.Port = polaris.Instance.Port
 	if err := provider.Heartbeat(request); err != nil {
-		g.Log().Fatal(ctx, "provider Heartbeat params:", request, " fail reason err:", err)
+		g.Log().Error(ctx, "provider Heartbeat params:", request, " fail reason err:", err)
 	}
+	g.Log().Info(ctx, "provider Heartbeat end ")
 }
 
-// NewProvider .
-func NewProvider(ctx context.Context) {
+// NewProvider . create Provider
+func NewProvider(ctx context.Context) api.ProviderAPI {
 	var provider, err = api.NewProviderAPIByConfig(cfgGlobal)
 	if nil != err {
 		g.Log().Fatal(ctx, "NewProvider api.NewProviderAPIByConfig fail err:", err)
 	}
-	// before process exits
-	defer provider.Destroy()
-
-	// 实行注册
-	register(ctx, provider)
-	if polaris.Config.IsHeartbeat > 0 {
-		// 心跳上报
-		Heartbeat(ctx, provider)
-	}
-	g.Log().Info(ctx, "api.NewProvider end")
+	return provider
 }
 
 // fillDefaults 完善远程默认链接
@@ -202,12 +208,12 @@ func polarisConfig(ctx context.Context, cfg *gcfg.Config) {
 	if v.IsNil() || v.IsEmpty() {
 		g.Log().Fatal(ctx, "GoFrame config get polaris is not exist")
 	}
-	g.Log().Debug(ctx, "polaris config:", v)
+	g.Log().Debug(ctx, "polaris map config:", v)
 	// 获取配置信息
 	if err = v.Struct(&polaris); err != nil {
 		g.Log().Fatal(ctx, "error:", err)
 	}
-	g.Log().Debug(ctx, "polaris config:", polaris)
+	g.Log().Debug(ctx, "polaris struct config:", polaris)
 
 	fillDefaults()
 }
