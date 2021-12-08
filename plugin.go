@@ -44,17 +44,17 @@ func (p GfPolarisPlugin) Description() string {
 	return "GoFrame and Polaris"
 }
 
-// Install plugin install
+// Install plugin installation
 func (p GfPolarisPlugin) Install(s *ghttp.Server) error {
-	fmt.Println("GoFrame-polaris插件正在安装...")
+	fmt.Println("GoFrame-polaris the plugin is being installed...")
 	configListener = p.Listener
 	fmt.Printf("configListener: %s", configListener)
-	return Init()
+	return InitConfigPolaris()
 }
 
-// Remove plugin remove
+// Remove plugin removal
 func (p GfPolarisPlugin) Remove() error {
 	Deregister()
-	fmt.Println("GoFrame-polaris插件被移除。")
+	fmt.Println("GoFrame-polaris plugin removed。")
 	return nil
 }
