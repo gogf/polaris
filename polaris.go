@@ -13,7 +13,6 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/gipv4"
 	"github.com/gogf/gf/v2/os/gcfg"
-	"github.com/gogf/gf/v2/os/gctx"
 	"github.com/gogf/gf/v2/os/gtimer"
 	"github.com/polarismesh/polaris-go/api"
 	"github.com/polarismesh/polaris-go/pkg/config"
@@ -37,16 +36,15 @@ const (
 func InitConfigPolaris() error {
 	var (
 		cfg = g.Cfg()
-		ctx = gctx.New()
 	)
 
 	polarisConfig(ctx, cfg)
 	// set logger dir
-	api.SetLoggersDir(polaris.Config.LoggerPath)
+	_ = api.SetLoggersDir(polaris.Config.LoggerPath)
 	cfgGlobal = globalPolarisConfig(ctx, cfg)
-
 	g.Log().Debug(ctx, "InitConfigPolaris config:", cfgGlobal)
 
+	provider(ctx)
 	// Perform registration operation
 	register(ctx)
 	// determine whether to report the heartbeat
@@ -63,29 +61,25 @@ func InitConfigPolaris() error {
 // Deregister anti registration service
 func Deregister() {
 	var (
-		ctx      = gctx.New()
-		provider = provider(ctx)
+		deregisterRequest = &api.InstanceDeRegisterRequest{}
 	)
-	defer provider.Destroy()
-
-	deregisterRequest := &api.InstanceDeRegisterRequest{}
+	defer apiProvider.Destroy()
 	deregisterRequest.Service = polaris.Instance.Service
 	deregisterRequest.Namespace = polaris.Instance.Namespace
 	deregisterRequest.Host = polaris.Instance.Host
 	deregisterRequest.Port = polaris.Instance.Port
 	deregisterRequest.ServiceToken = polaris.Instance.ServiceToken
-	if err := provider.Deregister(deregisterRequest); nil != err {
+	if err := apiProvider.Deregister(deregisterRequest); nil != err {
 		g.Log().Fatal(ctx, "fail to deregister instance, err is %v", err)
 	}
+	_, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	g.Log().Info(ctx, "Deregister end")
 }
 
 // register registration service
 func register(ctx context.Context) {
-	var provider = provider(ctx)
-	// before process exits
-	defer provider.Destroy()
-
 	g.Log().Debug(ctx, "register request start params:", polaris.Instance)
 	request := &api.InstanceRegisterRequest{}
 	request.Service = polaris.Instance.Service
@@ -101,7 +95,7 @@ func register(ctx context.Context) {
 	}
 	request.SetTTL(polaris.Instance.TTL)
 	request.SetHealthy(true)
-	resp, err := provider.Register(request)
+	resp, err := apiProvider.Register(request)
 	if nil != err {
 		g.Log().Fatal(ctx, "provider.register params:", resp, " fail reason err:", err)
 	}
@@ -110,28 +104,23 @@ func register(ctx context.Context) {
 
 // heartbeat .heartbeat report
 func heartbeat(ctx context.Context) {
-	var provider = provider(ctx)
-	// before process exits
-	defer provider.Destroy()
-
 	request := &api.InstanceHeartbeatRequest{}
 	request.Namespace = polaris.Instance.Namespace
 	request.Service = polaris.Instance.Service
 	request.Host = polaris.Instance.Host
 	request.Port = polaris.Instance.Port
-	if err := provider.Heartbeat(request); err != nil {
+	if err := apiProvider.Heartbeat(request); err != nil {
 		g.Log().Error(ctx, "provider heartbeat params:", request, " fail reason err:", err)
 	}
 	g.Log().Info(ctx, "provider heartbeat end ")
 }
 
 // provider . create Provider
-func provider(ctx context.Context) api.ProviderAPI {
-	var provider, err = api.NewProviderAPIByConfig(cfgGlobal)
+func provider(ctx context.Context) {
+	apiProvider, err = api.NewProviderAPIByConfig(cfgGlobal)
 	if nil != err {
 		g.Log().Fatal(ctx, "provider api.NewProviderAPIByConfig fail err:", err)
 	}
-	return provider
 }
 
 // fillDefaults improve the remote default link

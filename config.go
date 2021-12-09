@@ -9,12 +9,17 @@ package polaris
 import (
 	"time"
 
+	"github.com/gogf/gf/v2/os/gctx"
+	"github.com/polarismesh/polaris-go/api"
 	"github.com/polarismesh/polaris-go/pkg/config"
 )
 
 var (
-	cfgGlobal config.Configuration
-	polaris   *Polaris
+	cfgGlobal   config.Configuration
+	polaris     *Polaris
+	apiProvider api.ProviderAPI
+	err         error
+	ctx         = gctx.New()
 )
 
 // Polaris .
