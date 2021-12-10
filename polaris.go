@@ -55,6 +55,7 @@ func InitConfigPolaris() error {
 		})
 	}
 	g.Log().Info(ctx, "InitConfigPolaris end")
+	g.Log().Info(ctx, "GoFrame-polaris plugin install success")
 	return nil
 }
 
