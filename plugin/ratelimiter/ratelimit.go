@@ -7,52 +7,61 @@
 package ratelimiter
 
 import (
+	"errors"
 	"fmt"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/polarismesh/polaris-go/api"
-	"log"
 	"strings"
 )
 
 var (
 	limit, err    = api.NewLimitAPI()
-	param         = api.NewQuotaRequest()
 	namespace     string
 	service       string
-	labelsStr     string
-	rateLimitType string
+	limitFailFunc = func(r *ghttp.Request) {}
+	MatchLabelMap = map[string]string{}
 )
 
-// Register .
-func Register(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), pattern ...string) {
+// RegisterByUriLabel .
+func RegisterByUriLabel(labelMap map[string]string, limitExceededFunc func(r *ghttp.Request)) error {
+	return nil
+}
+
+// RateLimit .
+func RateLimit(r *ghttp.Request) {
+	if limitFailFunc == nil {
+
+	}
+}
+
+// RegisterByHook .
+func RegisterByHook(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), labelMap map[string]string) error {
 	if err != err {
-		log.Fatalf("fail to create consumerAPI, err is %v", err)
+		return errors.New(fmt.Sprintf("fail to create consumerAPI, err is %v", err))
 	}
-	if len(pattern) == 0 {
-		pattern = []string{"/*"}
-	}
-
-	label, err := parseLabels(labelsStr)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	param.SetLabels(label)
-	param.SetNamespace(namespace)
-	param.SetService(service)
-
-	r.BindHookHandler(pattern[0], ghttp.HookBeforeServe, func(r *ghttp.Request) {
-		getQuota, err := limit.GetQuota(param)
+	for pattern, labelsStr := range labelMap {
+		label, err := parseLabels(labelsStr)
 		if err != nil {
-			log.Fatalf("fail to get Quota,err is %v", err)
+			return err
 		}
-		if rateLimitType == "concurrently" {
-			defer getQuota.Release()
-		}
-		if getQuota.Get().Code == api.QuotaResultOk {
-			r.Middleware.Next()
-		}
-		limitExceededFunc(r)
-	})
+		param := api.NewQuotaRequest()
+		param.SetLabels(label)
+		param.SetNamespace(namespace)
+		param.SetService(service)
+		r.BindHookHandler(pattern, ghttp.HookBeforeServe, func(r *ghttp.Request) {
+			getQuota, err := limit.GetQuota(param)
+			if err != nil {
+				// gf 带有错误回收，只是中断本次请求
+				panic(err)
+			}
+			if getQuota.Get().Code == api.QuotaResultOk {
+				r.Middleware.Next()
+			} else {
+				limitExceededFunc(r)
+			}
+		})
+	}
+	return nil
 }
 
 //解析标签列表
