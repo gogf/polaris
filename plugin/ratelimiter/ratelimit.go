@@ -12,26 +12,67 @@ import (
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/polarismesh/polaris-go/api"
 	"strings"
+	"sync"
 )
 
 var (
 	limit, err    = api.NewLimitAPI()
 	namespace     string
 	service       string
-	limitFailFunc = func(r *ghttp.Request) {}
-	MatchLabelMap = map[string]string{}
+	limitFailFunc = func(r *ghttp.Request) {
+		r.Response.WriteExit(`{"code":500,"message":"资源不足"}`)
+	}
+	MatchLabelMap = map[string]map[string]string{}
+	mu            sync.RWMutex
 )
 
 // RegisterByUriLabel .
-func RegisterByUriLabel(labelMap map[string]string, limitExceededFunc func(r *ghttp.Request)) error {
+func RegisterByUriLabel(labelMap map[string]string, limitExceededFunc ...func(r *ghttp.Request)) error {
+	if len(labelMap) == 0 {
+		return errors.New("labelMap不能为空")
+	}
+	if len(limitExceededFunc) != 0 {
+		limitFailFunc = limitExceededFunc[0]
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	for uri, label := range labelMap {
+		labels, err := parseLabels(label)
+		if err != nil {
+			return err
+		}
+		MatchLabelMap[uri] = labels
+	}
 	return nil
 }
 
 // RateLimit .
 func RateLimit(r *ghttp.Request) {
-	if limitFailFunc == nil {
-
+	uri := r.RequestURI
+	mu.RLock()
+	defer mu.RUnlock()
+	// 能够直接精确匹配
+	if label, ok := MatchLabelMap[uri]; ok {
+		getQuotaResult(r, label)
 	}
+	// 遍历所有注册label，进行labelMatch检查，满足的最长的path胜出
+
+}
+
+func getQuotaResult(r *ghttp.Request, label map[string]string) {
+	param := api.NewQuotaRequest()
+	param.SetLabels(label)
+	param.SetNamespace(namespace)
+	param.SetService(service)
+	getQuota, err := limit.GetQuota(param)
+	if err != nil {
+		// gf 带有错误回收，只是中断本次请求
+		panic(err)
+	}
+	if getQuota.Get().Code == api.QuotaResultOk {
+		r.Middleware.Next()
+	}
+	limitFailFunc(r)
 }
 
 // RegisterByHook .
@@ -56,9 +97,8 @@ func RegisterByHook(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), l
 			}
 			if getQuota.Get().Code == api.QuotaResultOk {
 				r.Middleware.Next()
-			} else {
-				limitExceededFunc(r)
 			}
+			limitExceededFunc(r)
 		})
 	}
 	return nil
