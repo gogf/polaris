@@ -20,7 +20,7 @@ var (
 	namespace     string
 	service       string
 	limitFailFunc = func(r *ghttp.Request) {
-		r.Response.WriteExit(`{"code":500,"message":"资源不足"}`)
+		r.Response.WriteJsonExit(`{"code":500,"message":"资源不足"}`)
 	}
 	MatchLabelMap = map[string]map[string]string{}
 	mu            sync.RWMutex
@@ -54,25 +54,10 @@ func RateLimit(r *ghttp.Request) {
 	// 能够直接精确匹配
 	if label, ok := MatchLabelMap[uri]; ok {
 		getQuotaResult(r, label)
+		return
 	}
 	// 遍历所有注册label，进行labelMatch检查，满足的最长的path胜出
 
-}
-
-func getQuotaResult(r *ghttp.Request, label map[string]string) {
-	param := api.NewQuotaRequest()
-	param.SetLabels(label)
-	param.SetNamespace(namespace)
-	param.SetService(service)
-	getQuota, err := limit.GetQuota(param)
-	if err != nil {
-		// gf 带有错误回收，只是中断本次请求
-		panic(err)
-	}
-	if getQuota.Get().Code == api.QuotaResultOk {
-		r.Middleware.Next()
-	}
-	limitFailFunc(r)
 }
 
 // RegisterByHook .
@@ -102,6 +87,22 @@ func RegisterByHook(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), l
 		})
 	}
 	return nil
+}
+
+func getQuotaResult(r *ghttp.Request, label map[string]string) {
+	param := api.NewQuotaRequest()
+	param.SetLabels(label)
+	param.SetNamespace(namespace)
+	param.SetService(service)
+	getQuota, err := limit.GetQuota(param)
+	if err != nil {
+		// gf 带有错误回收，只是中断本次请求
+		panic(err)
+	}
+	if getQuota.Get().Code == api.QuotaResultOk {
+		r.Middleware.Next()
+	}
+	limitFailFunc(r)
 }
 
 //解析标签列表
