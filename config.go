@@ -32,11 +32,11 @@ type Polaris struct {
 
 // ConfigPolaris config
 type ConfigPolaris struct {
-	// 是否开启心跳上报
+	// IsHeartbeat whether to enable heartbeat reporting
 	IsHeartbeat uint `json:"isHeartbeat"`
-	// 日志目录
+	// LoggerPath log directory
 	LoggerPath string `json:"loggerPath"`
-	// 备份目录
+	// BackupPath backup directory
 	BackupPath string `json:"backupPath"`
 }
 
