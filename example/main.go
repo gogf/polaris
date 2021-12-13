@@ -16,14 +16,6 @@ import (
 	"github.com/gogf/polaris"
 )
 
-// @Project: polaris
-// @Author: houseme
-// @Description:
-// @File: main
-// @Version: 1.0.0
-// @Date: 2021/12/5 22:21
-// @Package example
-
 func main() {
 	ctx := context.Background()
 	adapter, err := gcfg.NewAdapterFile("config.yaml")
@@ -38,7 +30,7 @@ func main() {
 	})
 	s.Plugin(polaris.GfPolarisPlugin{
 		Listener: func(config string) {
-			g.Log().Print(ctx, "配置文件发生了更新！")
+			g.Log().Print(ctx, "Polaris register success")
 		},
 	})
 	s.Run()

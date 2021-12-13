@@ -6,9 +6,9 @@
 [![Production Ready](https://img.shields.io/badge/production-ready-blue.svg)](https://github.com/gogf/polaris)
 [![License](https://img.shields.io/github/license/gogf/polaris.svg?style=flat)](https://github.com/gogf/polaris)
 
-English | [简体中文](README_ZH.MD)
+[English](README.MD) | 简体中文
 
-Use Polaris mesh as service registration management and heartbeat reporting
+使用Polarismesh作为服务注册管理和心跳上报
 
 ```json
 version:0.0.1
@@ -28,10 +28,9 @@ require github.com/gogf/polaris latest
 golang version >= 1.16
 ```
 
-Use yaml configuration file by default
+默认使用yaml配置文件
 
-Assuming `config.yaml` configuration
-
+假设`config.yaml`配置
 ```yaml
 server:
   Address: :8199
@@ -62,9 +61,9 @@ app:
   jaegerEndpoint: http://tracing-analysis-dc-bj.aliyuncs.com
 
 polaris:
-    # system configuration
+    # 系统配置
     config:
-      # Whether the heartbeat is reported
+      # 是否心跳上报
       isHeartbeat: 1
       loggerPath: ./logs/polaris
       backupPath: ./logs/polaris
@@ -86,13 +85,13 @@ global:
 #     - 192.168.100.222:8090
 ```
 
-## Example
+## 示例
 
 [config.toml](example/config.yaml)
 
 [main.go](example/main.go)
 
-## Reference example
+## 引用示例
 
 ```go
 import (
