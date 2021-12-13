@@ -126,3 +126,7 @@ func main() {
 
 ```
 
+## 协议
+
+`GoFrame Polaris` 使用非常友好的 [MIT](LICENSE) 开源协议进行发布，永久`100%`开源免费。
+
