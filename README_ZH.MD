@@ -10,9 +10,6 @@
 
 使用Polarismesh作为服务注册管理和心跳上报
 
-```json
-version:0.0.1
-```
 
 ## Installation
 ```

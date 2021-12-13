@@ -10,9 +10,6 @@ English | [简体中文](README_ZH.MD)
 
 Use Polaris mesh as service registration management and heartbeat reporting
 
-```json
-version:0.0.1
-```
 
 ## Installation
 ```
