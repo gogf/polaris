@@ -22,25 +22,27 @@ var (
 
 // RegisterByHook .
 func RegisterByHook(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), labelMap map[string]string) error {
-	if err != err {
-		return errors.New(fmt.Sprintf("fail to create consumerAPI, err is %v", err))
-	}
-	instance, err := polaris.GetInstanceConfig(context.TODO())
 	if err != nil {
-		return err
+		return errors.New(fmt.Sprintf("fail to create consumerAPI, err is %v", err))
 	}
 	for pattern, labelsStr := range labelMap {
 		label, err := parseLabels(labelsStr)
 		if err != nil {
 			return err
 		}
-		param := api.NewQuotaRequest()
-		param.SetLabels(label)
-		param.SetNamespace(instance.Namespace)
-		param.SetService(instance.Service)
 		r.BindHookHandler(pattern, ghttp.HookBeforeServe, func(r *ghttp.Request) {
+			instance, err := polaris.GetInstanceConfig(context.TODO())
+			if err != nil {
+				fmt.Println(err.Error())
+				panic(err)
+			}
+			param := api.NewQuotaRequest()
+			param.SetLabels(label)
+			param.SetNamespace(instance.Namespace)
+			param.SetService(instance.Service)
 			getQuota, err := limit.GetQuota(param)
 			if err != nil {
+				fmt.Println(err.Error())
 				// gf 带有错误回收，只是中断本次请求
 				panic(err)
 			}
@@ -55,7 +57,7 @@ func RegisterByHook(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), l
 
 //解析标签列表
 func parseLabels(labelsStr string) (map[string]string, error) {
-	strLabels := strings.Split(labelsStr, ",")
+	strLabels := strings.Split(labelsStr, ";")
 	labels := make(map[string]string, len(strLabels))
 	for _, strLabel := range strLabels {
 		if len(strLabel) < 1 {

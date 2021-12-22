@@ -84,9 +84,9 @@ global:
 
 ## 示例
 
-[config.toml](example/config.yaml)
+[config.toml](example/provider/config.yaml)
 
-[main.go](example/main.go)
+[main.go](example/provider/main.go)
 
 ## 引用示例
 
