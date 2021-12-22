@@ -8,6 +8,7 @@ package polaris
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -41,8 +42,8 @@ func InitConfigPolaris() error {
 	polarisConfig(ctx, cfg)
 	// set logger dir
 	_ = api.SetLoggersDir(polaris.Config.LoggerPath)
-	cfgGlobal = globalPolarisConfig(ctx, cfg)
-	g.Log().Debug(ctx, "InitConfigPolaris config:", cfgGlobal)
+	CfgGlobal = globalPolarisConfig(ctx, cfg)
+	g.Log().Debug(ctx, "InitConfigPolaris config:", CfgGlobal)
 
 	provider(ctx)
 	// Perform registration operation
@@ -55,6 +56,7 @@ func InitConfigPolaris() error {
 		})
 	}
 	g.Log().Info(ctx, "InitConfigPolaris end")
+	g.Log().Info(ctx, "GoFrame-polaris plugin install success")
 	return nil
 }
 
@@ -117,7 +119,7 @@ func heartbeat(ctx context.Context) {
 
 // provider . create Provider
 func provider(ctx context.Context) {
-	apiProvider, err = api.NewProviderAPIByConfig(cfgGlobal)
+	apiProvider, err = api.NewProviderAPIByConfig(CfgGlobal)
 	if nil != err {
 		g.Log().Fatal(ctx, "provider api.NewProviderAPIByConfig fail err:", err)
 	}
@@ -196,7 +198,7 @@ func polarisConfig(ctx context.Context, cfg *gcfg.Config) {
 
 // Consumer .Get service list information
 func Consumer(ctx context.Context) {
-	consumer, err := api.NewConsumerAPIByConfig(cfgGlobal)
+	consumer, err := api.NewConsumerAPIByConfig(CfgGlobal)
 	if nil != err {
 		g.Log().Fatalf(ctx, "fail to create consumerAPI, err is %v", err)
 	}
@@ -209,4 +211,14 @@ func Consumer(ctx context.Context) {
 	for i, inst := range resp.Instances {
 		g.Log().Printf(ctx, "instance %d is %s:%d\n", i, inst.GetHost(), inst.GetPort())
 	}
+}
+
+func GetInstanceConfig(ctx context.Context) (*InstanceRequest, error) {
+	if polaris == nil {
+		return nil, errors.New("polaris unregister")
+	}
+	if polaris.Instance == nil {
+		return nil, errors.New("polaris unregister")
+	}
+	return polaris.Instance, nil
 }

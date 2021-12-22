@@ -48,7 +48,6 @@ func (p GfPolarisPlugin) Description() string {
 func (p GfPolarisPlugin) Install(s *ghttp.Server) error {
 	fmt.Println("GoFrame-polaris the plugin is being installed...")
 	configListener = p.Listener
-	fmt.Printf("configListener: %s", configListener)
 	return InitConfigPolaris()
 }
 
