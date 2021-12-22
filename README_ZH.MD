@@ -83,6 +83,13 @@ global:
 ```
 
 ## 示例
+- provider
+
+[config.toml](example/provider/config.yaml)
+
+[main.go](example/provider/main.go)
+
+- ratelimiter
 
 [config.toml](example/provider/config.yaml)
 

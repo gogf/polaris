@@ -16,12 +16,9 @@ import (
 	"strings"
 )
 
-var (
-	limit, err = api.NewLimitAPI()
-)
-
 // RegisterByHook .
 func RegisterByHook(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), labelMap map[string]string) error {
+	limit, err := api.NewLimitAPIByConfig(polaris.CfgGlobal)
 	if err != nil {
 		return errors.New(fmt.Sprintf("fail to create consumerAPI, err is %v", err))
 	}
@@ -33,7 +30,6 @@ func RegisterByHook(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), l
 		r.BindHookHandler(pattern, ghttp.HookBeforeServe, func(r *ghttp.Request) {
 			instance, err := polaris.GetInstanceConfig(context.TODO())
 			if err != nil {
-				fmt.Println(err.Error())
 				panic(err)
 			}
 			param := api.NewQuotaRequest()
@@ -42,12 +38,13 @@ func RegisterByHook(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), l
 			param.SetService(instance.Service)
 			getQuota, err := limit.GetQuota(param)
 			if err != nil {
-				fmt.Println(err.Error())
 				// gf 带有错误回收，只是中断本次请求
 				panic(err)
 			}
-			if getQuota.Get().Code == api.QuotaResultOk {
+			result := getQuota.Get()
+			if result.Code == api.QuotaResultOk {
 				r.Middleware.Next()
+				return
 			}
 			limitExceededFunc(r)
 		})
@@ -57,7 +54,7 @@ func RegisterByHook(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), l
 
 //解析标签列表
 func parseLabels(labelsStr string) (map[string]string, error) {
-	strLabels := strings.Split(labelsStr, ";")
+	strLabels := strings.Split(labelsStr, ",")
 	labels := make(map[string]string, len(strLabels))
 	for _, strLabel := range strLabels {
 		if len(strLabel) < 1 {

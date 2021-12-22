@@ -42,8 +42,8 @@ func InitConfigPolaris() error {
 	polarisConfig(ctx, cfg)
 	// set logger dir
 	_ = api.SetLoggersDir(polaris.Config.LoggerPath)
-	cfgGlobal = globalPolarisConfig(ctx, cfg)
-	g.Log().Debug(ctx, "InitConfigPolaris config:", cfgGlobal)
+	CfgGlobal = globalPolarisConfig(ctx, cfg)
+	g.Log().Debug(ctx, "InitConfigPolaris config:", CfgGlobal)
 
 	provider(ctx)
 	// Perform registration operation
@@ -119,7 +119,7 @@ func heartbeat(ctx context.Context) {
 
 // provider . create Provider
 func provider(ctx context.Context) {
-	apiProvider, err = api.NewProviderAPIByConfig(cfgGlobal)
+	apiProvider, err = api.NewProviderAPIByConfig(CfgGlobal)
 	if nil != err {
 		g.Log().Fatal(ctx, "provider api.NewProviderAPIByConfig fail err:", err)
 	}
@@ -198,7 +198,7 @@ func polarisConfig(ctx context.Context, cfg *gcfg.Config) {
 
 // Consumer .Get service list information
 func Consumer(ctx context.Context) {
-	consumer, err := api.NewConsumerAPIByConfig(cfgGlobal)
+	consumer, err := api.NewConsumerAPIByConfig(CfgGlobal)
 	if nil != err {
 		g.Log().Fatalf(ctx, "fail to create consumerAPI, err is %v", err)
 	}

@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	cfgGlobal   config.Configuration
+	CfgGlobal   config.Configuration
 	polaris     *Polaris
 	apiProvider api.ProviderAPI
 	err         error

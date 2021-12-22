@@ -8,7 +8,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -40,17 +39,25 @@ func main() {
 	})
 
 	// router
-	s.BindHandler("/", func(r *ghttp.Request) {
-		fmt.Println("success.")
+	s.Group("/", func(group *ghttp.RouterGroup) {
+		group.ALL("/getUserInfo", func(r *ghttp.Request) {
+			r.Response.Write("halo")
+			r.ExitAll()
+		})
 	})
 
 	// init rate limit
 	limitedFunc := func(r *ghttp.Request) {
-		fmt.Println("limit.")
+		r.Response.Write("资源不足")
+		r.ExitAll()
 	}
-	err = ratelimiter.RegisterByHook(s, limitedFunc, map[string]string{
-		"/*": "*:* ; method:*",
-	})
+
+	labelRule := map[string]string{
+		"/getUserInfo": "env:pre,method:getUserInfo",
+	}
+
+	// register limit by gf hook
+	err = ratelimiter.RegisterByHook(s, limitedFunc, labelRule)
 	if err != nil {
 		log.Fatalf("init fail,this error is %v", err)
 	}
