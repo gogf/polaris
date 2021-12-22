@@ -44,8 +44,8 @@ github.com/go-redis/redis/v8 v8.11.4/go.mod h1:2Z2wHZXdQpCDXEGzqMockDpNyYvi2l4Px
 github.com/go-sql-driver/mysql v1.6.0 h1:BCTh4TKNUYmOmMUcQ3IipzF5prigylS7XXjEkfCHuOE=
 github.com/go-sql-driver/mysql v1.6.0/go.mod h1:DCzpHaOWr8IXmIStZouvnhqoel9Qv2LBy8hT2VhHyBg=
 github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0/go.mod h1:fyg7847qk6SyHyPtNmDHnmrv/HOrqktSC+C9fM+CJOE=
-github.com/gogf/gf/v2 v2.0.0-beta.0.20211207135506-a8d6363e7962 h1:LP69yVz/9+KG5URGSRmsghTVOJd2vO0L3+50GxXpJCA=
-github.com/gogf/gf/v2 v2.0.0-beta.0.20211207135506-a8d6363e7962/go.mod h1:SlsV9/wEd9Pz6tJ5hazmVv/RtHcpR1DkXBzJk28pFYM=
+github.com/gogf/gf/v2 v2.0.0-beta.0.20211213123056-7d84ab761ba6 h1:SX/motguYKPKCFQZ7wzTSssQIx6zLxoo96q3wkLR+dg=
+github.com/gogf/gf/v2 v2.0.0-beta.0.20211213123056-7d84ab761ba6/go.mod h1:SlsV9/wEd9Pz6tJ5hazmVv/RtHcpR1DkXBzJk28pFYM=
 github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b/go.mod h1:SBH7ygxi8pfUlaOkMMuAQtPIUF8ecWP5IEl/CR7VP2Q=
 github.com/golang/mock v1.1.1/go.mod h1:oTYuIxOrZwtPieC+H1uAHpcLFnEyAGVDL/k47Jfbm0A=
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
