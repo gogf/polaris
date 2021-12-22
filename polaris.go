@@ -8,6 +8,7 @@ package polaris
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/gogf/gf/v2/frame/g"
@@ -210,4 +211,14 @@ func Consumer(ctx context.Context) {
 	for i, inst := range resp.Instances {
 		g.Log().Printf(ctx, "instance %d is %s:%d\n", i, inst.GetHost(), inst.GetPort())
 	}
+}
+
+func GetInstanceConfig(ctx context.Context) (*InstanceRequest, error) {
+	if polaris == nil {
+		return nil, errors.New("polaris unregister")
+	}
+	if polaris.Instance == nil {
+		return nil, errors.New("polaris unregister")
+	}
+	return polaris.Instance, nil
 }

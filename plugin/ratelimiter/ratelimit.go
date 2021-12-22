@@ -7,63 +7,27 @@
 package ratelimiter
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/gogf/polaris"
 	"github.com/polarismesh/polaris-go/api"
 	"strings"
-	"sync"
 )
 
 var (
-	limit, err    = api.NewLimitAPI()
-	namespace     string
-	service       string
-	limitFailFunc = func(r *ghttp.Request) {
-		r.Response.WriteJsonExit(`{"code":500,"message":"资源不足"}`)
-	}
-	MatchLabelMap = map[string]map[string]string{}
-	mu            sync.RWMutex
+	limit, err = api.NewLimitAPI()
 )
-
-// RegisterByUriLabel .
-func RegisterByUriLabel(labelMap map[string]string, limitExceededFunc ...func(r *ghttp.Request)) error {
-	if len(labelMap) == 0 {
-		return errors.New("labelMap不能为空")
-	}
-	if len(limitExceededFunc) != 0 {
-		limitFailFunc = limitExceededFunc[0]
-	}
-	mu.Lock()
-	defer mu.Unlock()
-	for uri, label := range labelMap {
-		labels, err := parseLabels(label)
-		if err != nil {
-			return err
-		}
-		MatchLabelMap[uri] = labels
-	}
-	return nil
-}
-
-// RateLimit .
-func RateLimit(r *ghttp.Request) {
-	uri := r.RequestURI
-	mu.RLock()
-	defer mu.RUnlock()
-	// 能够直接精确匹配
-	if label, ok := MatchLabelMap[uri]; ok {
-		getQuotaResult(r, label)
-		return
-	}
-	// 遍历所有注册label，进行labelMatch检查，满足的最长的path胜出
-
-}
 
 // RegisterByHook .
 func RegisterByHook(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), labelMap map[string]string) error {
 	if err != err {
 		return errors.New(fmt.Sprintf("fail to create consumerAPI, err is %v", err))
+	}
+	instance, err := polaris.GetInstanceConfig(context.TODO())
+	if err != nil {
+		return err
 	}
 	for pattern, labelsStr := range labelMap {
 		label, err := parseLabels(labelsStr)
@@ -72,8 +36,8 @@ func RegisterByHook(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), l
 		}
 		param := api.NewQuotaRequest()
 		param.SetLabels(label)
-		param.SetNamespace(namespace)
-		param.SetService(service)
+		param.SetNamespace(instance.Namespace)
+		param.SetService(instance.Service)
 		r.BindHookHandler(pattern, ghttp.HookBeforeServe, func(r *ghttp.Request) {
 			getQuota, err := limit.GetQuota(param)
 			if err != nil {
@@ -87,22 +51,6 @@ func RegisterByHook(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), l
 		})
 	}
 	return nil
-}
-
-func getQuotaResult(r *ghttp.Request, label map[string]string) {
-	param := api.NewQuotaRequest()
-	param.SetLabels(label)
-	param.SetNamespace(namespace)
-	param.SetService(service)
-	getQuota, err := limit.GetQuota(param)
-	if err != nil {
-		// gf 带有错误回收，只是中断本次请求
-		panic(err)
-	}
-	if getQuota.Get().Code == api.QuotaResultOk {
-		r.Middleware.Next()
-	}
-	limitFailFunc(r)
 }
 
 //解析标签列表
