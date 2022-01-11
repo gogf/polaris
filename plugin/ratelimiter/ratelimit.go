@@ -8,19 +8,20 @@ package ratelimiter
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"github.com/gogf/gf/v2/net/ghttp"
-	"github.com/gogf/polaris"
-	"github.com/polarismesh/polaris-go/api"
 	"strings"
+
+	"github.com/gogf/gf/v2/net/ghttp"
+	"github.com/polarismesh/polaris-go/api"
+
+	"github.com/gogf/polaris"
 )
 
 // RegisterByHook .
 func RegisterByHook(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), labelMap map[string]string) error {
 	limit, err := api.NewLimitAPIByConfig(polaris.CfgGlobal)
 	if err != nil {
-		return errors.New(fmt.Sprintf("fail to create consumerAPI, err is %v", err))
+		return fmt.Errorf("fail to create consumerAPI, err is %v", err)
 	}
 	for pattern, labelsStr := range labelMap {
 		label, err := parseLabels(labelsStr)
@@ -52,7 +53,7 @@ func RegisterByHook(r *ghttp.Server, limitExceededFunc func(r *ghttp.Request), l
 	return nil
 }
 
-//解析标签列表
+// 解析标签列表
 func parseLabels(labelsStr string) (map[string]string, error) {
 	strLabels := strings.Split(labelsStr, ",")
 	labels := make(map[string]string, len(strLabels))

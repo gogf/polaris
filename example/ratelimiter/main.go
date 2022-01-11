@@ -13,6 +13,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/net/ghttp"
 	"github.com/gogf/gf/v2/os/gcfg"
+
 	"github.com/gogf/polaris"
 	"github.com/gogf/polaris/plugin/ratelimiter"
 )
@@ -25,6 +26,7 @@ func main() {
 		g.Log().Fatal(ctx, "boot init g cfg.NewAdapterFile error:", err)
 	}
 	g.Cfg().SetAdapter(adapter)
+
 	s := g.Server()
 
 	err = polaris.InitConfigPolaris()

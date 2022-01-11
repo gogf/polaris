@@ -98,8 +98,9 @@ func register(ctx context.Context) {
 	request.SetTTL(polaris.Instance.TTL)
 	request.SetHealthy(true)
 	resp, err := apiProvider.Register(request)
+	g.Log().Debug(ctx, "provider.register response:", resp)
 	if nil != err {
-		g.Log().Fatal(ctx, "provider.register params:", resp, " fail reason err:", err)
+		g.Log().Fatal(ctx, "provider.register fail reason err:", err)
 	}
 	g.Log().Info(ctx, "provider.register end")
 }
@@ -112,7 +113,7 @@ func heartbeat(ctx context.Context) {
 	request.Host = polaris.Instance.Host
 	request.Port = polaris.Instance.Port
 	if err := apiProvider.Heartbeat(request); err != nil {
-		g.Log().Error(ctx, "provider heartbeat params:", request, " fail reason err:", err)
+		g.Log().Error(ctx, "provider heartbeat fail reason err:", err)
 	}
 	g.Log().Info(ctx, "provider heartbeat end ")
 }
@@ -213,6 +214,7 @@ func Consumer(ctx context.Context) {
 	}
 }
 
+// GetInstanceConfig .instance Config
 func GetInstanceConfig(ctx context.Context) (*InstanceRequest, error) {
 	if polaris == nil {
 		return nil, errors.New("polaris unregister")
